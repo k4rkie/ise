@@ -5,6 +5,8 @@ ise is a isometric topdown game engine written in C using [Raylib](https://githu
 > [!WARNING]
 > Still in super early stages
 
+---
+
 ### Usage
 
 #### Clone the repo
