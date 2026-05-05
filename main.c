@@ -1,108 +1,110 @@
 #include <raylib.h>
 
-#define WIN_WIDTH 1200
-#define WIN_HEIGHT 1000
+#define TILE_WIDTH 64
+#define TILE_HEIGHT 32
 
-#define RAYBLACK (Color){8, 8, 8, 255}
-#define TILE_SIZE 32
+#define WIN_WIDTH 1200
+#define WIN_HEIGHT 800
+
 #define MAP_COLS 30
-#define MAP_ROWS 20
-#define MAP_WIDTH (MAP_COLS * TILE_SIZE)
-#define MAP_HEIGHT (MAP_ROWS * TILE_SIZE)
+#define MAP_ROWS 30
+#define MAP_WIDTH ((MAP_COLS + MAP_ROWS) * TILE_WIDTH / 2)
+#define MAP_HEIGHT ((MAP_COLS + MAP_ROWS) * TILE_HEIGHT / 2)
 
 typedef struct
 {
   int type;
 } Tile;
-Tile map[MAP_ROWS][MAP_COLS];
+
+Tile Map[MAP_ROWS][MAP_COLS];
 
 typedef struct
 {
   Vector2 position;
 } Player;
 
-int main()
+int main(void)
 {
-  InitWindow(WIN_WIDTH, WIN_HEIGHT, "Isometic Map Editor");
+  InitWindow(WIN_WIDTH, WIN_HEIGHT, "GRID TEST");
+
   SetTargetFPS(60);
-  float speed = 300.0f;
+
+  float speed = 100.0f;
 
   // Initialize map
-  for (int i = 0; i < MAP_ROWS; i++)
+  for (int row = 0; row < MAP_ROWS; row++)
   {
-    for (int j = 0; j < MAP_COLS; j++)
+    for (int col = 0; col < MAP_COLS; col++)
     {
-      map[i][j] = (Tile){.type = 0};
+      Map[row][col] = (Tile){.type = 0};
     }
   }
 
-  map[2][3].type = 1;
-  map[5][7].type = 1;
-  map[1][9].type = 1;
-  map[12][5].type = 1;
+  int offset_x = (WIN_WIDTH / 2);
+  int offset_y = (WIN_HEIGHT / 2) - (MAP_HEIGHT / 2);
 
   // Initialize player
   Player bob = {
       .position = (Vector2){
-          .x = (float)(MAP_WIDTH / 2),
-          .y = (float)(MAP_HEIGHT / 2)}};
+          .x = (float)(WIN_WIDTH / 2),
+          .y = (float)(WIN_HEIGHT / 2)}};
+
+  Camera2D cam = {0};
+  cam.offset = (Vector2){WIN_WIDTH / 2, WIN_HEIGHT / 2};
+  cam.target = bob.position;
+  cam.zoom = 1.0f;
 
   while (!WindowShouldClose())
   {
     float dt = GetFrameTime();
+
+    if (IsKeyDown(KEY_W))
+    {
+      bob.position.y -= speed * dt;
+    }
+    if (IsKeyDown(KEY_S))
+    {
+      bob.position.y += speed * dt;
+    }
+    if (IsKeyDown(KEY_D))
+    {
+      bob.position.x += speed * dt;
+    }
+    if (IsKeyDown(KEY_A))
+    {
+      bob.position.x -= speed * dt;
+    }
+
+    cam.target = bob.position;
+
     BeginDrawing();
+    BeginMode2D(cam);
+    ClearBackground((Color){8, 8, 8, 255});
 
-    ClearBackground(RAYBLACK);
-
-    int offset_x = (WIN_WIDTH - MAP_WIDTH) / 2;
-    int offset_y = (WIN_HEIGHT - MAP_HEIGHT) / 2;
-
+    // Loop over map to draw tiles
     for (int row = 0; row < MAP_ROWS; row++)
     {
       for (int col = 0; col < MAP_COLS; col++)
       {
-        if (map[row][col].type == 0)
-        {
-          DrawRectangleLines(col * TILE_SIZE + offset_x, row * TILE_SIZE + offset_y, TILE_SIZE, TILE_SIZE, RAYWHITE);
-        }
-        else
-        {
-          DrawRectangle(col * TILE_SIZE + offset_x, row * TILE_SIZE + offset_y, TILE_SIZE, TILE_SIZE, GREEN);
-        }
-      }
-    }
+        float cx = (col - row) * TILE_WIDTH / 2 + offset_x;
+        float cy = (col + row) * TILE_HEIGHT / 2 + offset_y;
 
-    if (IsKeyDown(KEY_W))
-    {
-      if (bob.position.y - 10.0f >= 0.0f + offset_y)
-      {
-        bob.position.y -= speed * dt;
-      }
-    }
-    if (IsKeyDown(KEY_S))
-    {
-      if (bob.position.y + 10.0f <= MAP_HEIGHT + offset_y)
-      {
-        bob.position.y += speed * dt;
-      }
-    }
-    if (IsKeyDown(KEY_D))
-    {
-      if (bob.position.x + 10.0f <= MAP_WIDTH + offset_x)
-      {
-        bob.position.x += speed * dt;
-      }
-    }
-    if (IsKeyDown(KEY_A))
-    {
-      if (bob.position.x - 10.0f >= 0.0f + offset_x)
-      {
-        bob.position.x -= speed * dt;
+        Vector2 top =
+            {.x = cx, .y = cy - (float)(TILE_HEIGHT / 2)};
+        Vector2 bottom =
+            {.x = cx, .y = cy + (float)(TILE_HEIGHT / 2)};
+        Vector2 right =
+            {.x = cx + (float)(TILE_WIDTH / 2), .y = cy};
+        Vector2 left =
+            {.x = cx - (float)(TILE_WIDTH / 2), .y = cy};
+
+        DrawTriangleLines(top, right, left, RAYWHITE);
+        DrawTriangleLines(bottom, left, right, RAYWHITE);
       }
     }
 
     DrawCircle((int)(bob.position.x), (int)(bob.position.y), 10.0f, RED);
-
+    EndMode2D();
     DrawText(TextFormat("x: %.1f  y: %.1f", bob.position.x, bob.position.y), 10, 10, 20, RED);
     EndDrawing();
   }
