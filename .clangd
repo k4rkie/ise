@@ -1,0 +1,2 @@
+CompileFlags:
+  Add: [-I/home/k4rkie/dev/ise/include, -I/home/k4rkie/dev/ise/src]

@@ -6,8 +6,8 @@ LDFLAGS = -L./lib -lraylib -lm -lpthread -ldl -lrt -lX11
 # The output binary name
 TARGET = build/main
 
-# The source file
-SRC = main.c
+# The source files
+SRC = src/main.c src/player.c src/tile.c src/render.c
 
 # The default rule
 default: $(TARGET)
